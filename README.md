@@ -1,5 +1,5 @@
 
-This project help you to deploy Kubernetes on Linux without loadbalancer on cloud platforms.
+This project helps you to deploy Kubernetes on Linux without a load balancer on cloud platforms.
 
 <img src="./img/ionos.png"/>
 
