@@ -1,0 +1,43 @@
+[preinstall]
+#172.16.16.88 ansible_user=root
+#172.16.16.104 ansible_user=root
+172.16.16.184 ansible_user=root
+#172.16.16.111 ansible_user=root
+#172.16.16.80 ansible_user=root
+
+
+
+[master]
+172.16.16.88 ansible_user=root
+172.16.16.104 ansible_user=root
+172.16.16.184 ansible_user=root
+
+
+[loadbalancer]
+172.16.16.54  ansible_user=root
+172.16.16.81  ansible_user=root
+172.16.16.254  ansible_user=root
+
+
+
+[worker]
+172.16.16.111 ansible_user=root
+172.16.16.80 ansible_user=root
+
+
+[storage]
+172.16.16.86 ansible_user=root
+
+
+
+[cluster_init]
+172.16.16.88 ansible_user=root
+
+[worker_init]
+172.16.16.111 ansible_user=root
+172.16.16.80 ansible_user=root
+
+[master_init]
+#172.16.16.104 ansible_user=root  # Master2
+172.16.16.184 ansible_user=root  # Master3
+

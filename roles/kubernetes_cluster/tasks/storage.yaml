@@ -1,0 +1,37 @@
+---
+- name: Install NFS server
+  apt:
+    name: nfs-kernel-server
+    state: present
+  tags:
+    - storage
+- name: Create directory for Storage
+  file:
+    path: /srv/nfs/kube
+    state: directory
+  tags:
+    - storage
+- name: Modify /etc/exports
+  blockinfile:
+    path: /etc/exports
+    block: |
+      /srv/nfs/kube/ {{ storage_export }}(rw,sync)
+  tags:
+    - storage
+
+- name: Export NFS share
+  command: exportfs -f
+  tags:
+    - storage
+
+- name: Show NFS exports
+  command: showmount -e
+  register: showmount_output
+  tags:
+    - storage
+
+- name: Display NFS exports
+  debug:
+    var: showmount_output.stdout
+  tags:
+    - storage

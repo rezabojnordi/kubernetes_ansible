@@ -1,0 +1,9 @@
+---
+# tasks file for mysql_backup
+- include: preinstall.yaml
+- include: loadbalancer.yaml
+- include: init_kubernetes.yaml
+- include: storage.yaml
+- include: weave_network.yaml
+- include: join_worker_to_master.yaml
+- include: join_master_to_master.yaml

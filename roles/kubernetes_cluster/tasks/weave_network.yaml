@@ -1,0 +1,20 @@
+---
+
+- name: Apply Weave daemonset
+  command: kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml --kubeconfig /etc/kubernetes/admin.conf
+  tags: network
+
+
+- name: Get CoreDNS deployment YAML
+  command: kubectl -n kube-system get deployment coredns -o yaml --kubeconfig /etc/kubernetes/admin.conf
+  register: coredns_output
+  tags: network
+
+- name: Modify CoreDNS deployment YAML
+  command: "echo '{{ coredns_output.stdout }}' | sed 's/allowPrivilegeEscalation: false/allowPrivilegeEscalation: true/g'"
+  register: modified_yaml
+  tags: network
+
+- name: Apply modified CoreDNS deployment
+  command: "echo '{{ modified_yaml.stdout }}' | kubectl apply -f - --kubeconfig /etc/kubernetes/admin.conf"
+  tags: network

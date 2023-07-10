@@ -1,0 +1,9 @@
+---
+
+keepalive_ip : "172.16.16.200"
+interface_name: "eth0"
+pod_network_cidr: "192.168.0.0/16"
+master1: "172.16.16.88"
+master2: "172.16.16.104"
+master3: "172.16.16.184"
+storage_export: "172.16.104.0/24"

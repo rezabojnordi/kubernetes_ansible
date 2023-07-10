@@ -1,0 +1,40 @@
+---
+
+- name: Run kubeadm init
+  command: kubeadm init --control-plane-endpoint={{ keepalive_ip }}:6443 
+  register: init_output
+  tags: master1
+- name: Print client output
+  debug:
+    var: init_output
+  tags: master1
+
+- name: Extract join command and token
+  set_fact:
+    join_command: "{{ init_output.stdout_lines | select('match', '^kubeadm join') | first }}"
+    join_token: "{{ init_output.stdout_lines | select('match', '^kubeadm join') | first | regex_replace('.*--token ([^ ]*).*', '\\1') }}"
+  tags: master1
+
+
+- name: Create .kube directory
+  file:
+    path: "{{ ansible_env.HOME }}/.kube"
+    state: directory
+    mode: '0755'
+  tags: master1
+
+- name: Copy admin.conf to .kube/config
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "{{ ansible_env.HOME }}/.kube/config"
+    remote_src: true
+    mode: '0644'
+  tags: master1
+
+- name: Set ownership for .kube/config
+  file:
+    path: "{{ ansible_env.HOME }}/.kube/config"
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    mode: '0600'
+  tags: master1

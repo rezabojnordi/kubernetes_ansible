@@ -1,0 +1,136 @@
+---
+# tasks file for kubernetes_cluster
+  - name: Update apt cache
+    apt:
+        update_cache: yes
+    tags: preinstall
+
+  - name: Install containerd
+    apt:
+      name: containerd
+      state: present
+    tags: preinstall
+
+  - name: Create containerd config directory
+    file:
+      path: /etc/containerd
+      state: directory
+    tags: preinstall
+
+  - name: Generate containerd config file
+    shell: containerd config default
+    register: containerd_config
+    tags: preinstall
+
+  - name: Save containerd config file
+    copy:
+      content: "{{ containerd_config.stdout }}"
+      dest: /etc/containerd/config.toml
+    tags: preinstall
+
+  - name: Restart containerd
+    service:
+      name: containerd
+      state: restarted
+    tags: preinstall
+
+
+  - name: Install dependencies for up command
+    apt:
+      name: "{{ item }}"
+      state: present
+    loop:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+      - nfs-common
+      - bridge-utils
+    tags: preinstall
+
+
+
+  - name: Import GPG key for Kubernetes repository
+    shell: curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+    changed_when: false
+    tags: preinstall
+
+  - name: New Import GPG key for Kubernetes repository
+    shell: sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B53DC80D13EDEF05
+    tags: preinstall
+
+  - name: Add Kubernetes repository
+    lineinfile:
+      path: /etc/apt/sources.list.d/kubernetes.list
+      line: "deb https://apt.kubernetes.io/ kubernetes-xenial main"
+      create: yes
+    tags: preinstall
+
+  # - name: remove the package
+  #   shell: sudo apt-get remove kub* -y
+  #   tags: preinstall
+
+  - name: Update apt cache
+    apt:
+      update_cache: yes
+    tags: preinstall
+
+  - name: Install Kubernetes packages
+    apt:
+      name: "{{ item }}"
+      state: present
+      allow_downgrades: yes
+    loop:
+      - kubelet=1.26.6-00
+      - kubeadm=1.26.6-00
+      - kubectl=1.26.6-00
+
+    tags: preinstall
+
+  - name: Disable swap
+    command: swapoff -a
+    changed_when: false
+    tags: preinstall
+
+  - name: Comment out swap entry in /etc/fstab
+    lineinfile:
+      path: /etc/fstab
+      regexp: '^/swap '
+      line: '#/swap '
+    tags: preinstall
+
+  - name: Check if containerd.conf file exists
+    stat:
+      path: /etc/modules-load.d/containerd.conf
+    register: containerd_conf_exists
+    tags: preinstall
+
+  - name: Create containerd.conf file if it doesn't exist
+    copy:
+      dest: /etc/modules-load.d/containerd.conf
+      content: |
+        overlay
+        br_netfilter
+    when: not containerd_conf_exists.stat.exists
+    tags: preinstall
+
+  - name: Load containerd modules
+    shell: modprobe {{ item }}
+    with_items:
+      - overlay
+      - br_netfilter
+    tags: preinstall
+
+  - name: Add Kubernetes sysctl configuration
+    blockinfile:
+      path: /etc/sysctl.conf
+      block: |
+        net.bridge.bridge-nf-call-ip6tables = 1
+        net.bridge.bridge-nf-call-iptables = 1
+        net.ipv4.ip_forward                 = 1
+    tags: preinstall
+
+  - name: Reload sysctl configuration
+    command: sysctl --system
+    tags: preinstall
